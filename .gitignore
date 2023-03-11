@@ -1,0 +1,5 @@
+node_modules/
+
+# Testing stuff
+data/
+src/playground.ts
