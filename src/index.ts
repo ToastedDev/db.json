@@ -1,5 +1,5 @@
 import fs from "fs";
-import { get as _get, isNil, isString, set as _set } from "lodash";
+import { get as _get, has as _has, set as _set, isNil, isString } from "lodash";
 import { resolve } from "path";
 
 export interface DBOptions {
@@ -84,6 +84,14 @@ class JsonDB {
         },
       });
     else return data;
+  }
+
+  has(key: string, path?: string) {
+    key = key.toString();
+    if (!isNil(path)) {
+      const data = this.get(key);
+      return _has(data, path);
+    } else return fs.existsSync(this.getDbPath(key));
   }
 }
 
