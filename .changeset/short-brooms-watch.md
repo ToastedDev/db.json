@@ -1,3 +1,7 @@
+---
+"toasted-db.json": patch
+---
+
 # toasted-db.json
 
 Make databases with just simple JSON files! Heavily inspired from Enmap.
