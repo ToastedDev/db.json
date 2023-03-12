@@ -3,9 +3,7 @@
   "version": "0.0.0",
   "description": "Make databases with just simple JSON files!",
   "main": "index.js",
-  "scripts": {
-    "test": "vitest"
-  },
+  "scripts": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
