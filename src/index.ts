@@ -1,9 +1,18 @@
 import fs from "fs";
-import { get as _get, has as _has, set as _set, isNil, isString } from "lodash";
+import {
+  get as _get,
+  has as _has,
+  set as _set,
+  clone,
+  cloneDeep,
+  isNil,
+  isString,
+} from "lodash";
 import { resolve } from "path";
 
 export interface DBOptions {
   dataDir: string;
+  cloneLevel: "none" | "shallow" | "deep";
   proxy: boolean;
 }
 
@@ -42,6 +51,7 @@ class JsonDB {
   private options: DBOptions = {
     dataDir: "./data",
     proxy: false,
+    cloneLevel: "deep",
   };
   constructor(options?: Partial<DBOptions>) {
     if (options) {
@@ -51,6 +61,7 @@ class JsonDB {
         this.options.dataDir = options.dataDir;
       }
       if (options.proxy) this.options.proxy = options.proxy;
+      if (options.cloneLevel) this.options.cloneLevel = options.cloneLevel;
     }
 
     return this;
@@ -91,6 +102,12 @@ class JsonDB {
       default:
         return null;
     }
+  }
+  private clone(data: any) {
+    if (this.options.cloneLevel === "none") return data;
+    if (this.options.cloneLevel === "shallow") return clone(data);
+    if (this.options.cloneLevel === "deep") return cloneDeep(data);
+    throw new SyntaxError("Invalid cloneLevel.");
   }
 
   get(key: string, path?: string) {
@@ -139,6 +156,9 @@ class JsonDB {
     }
 
     const dbPath = this.getPath(key);
+
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
+
     if (this.options.proxy)
       return new Proxy(data, {
         set(target, key, value) {
@@ -156,6 +176,26 @@ class JsonDB {
       const data = this.get(key);
       return _has(data, path);
     } else return fs.existsSync(this.getPath(key));
+  }
+
+  ensure(key: string, defaultValue: any, path?: string) {
+    if (isNil(defaultValue))
+      throw new SyntaxError(
+        `No default value was provided on ensure method for "${key}".`
+      );
+
+    if (!isNil(path)) {
+      if (this.has(key, path)) return this.get(key, path);
+
+      this.set(key, defaultValue, path);
+      return defaultValue;
+    }
+
+    if (this.has(key)) return this.get(key);
+
+    const clonedValue = this.clone(defaultValue);
+    this.set(key, clonedValue);
+    return clonedValue;
   }
 
   push(key: string, val: any, path?: string): this {
