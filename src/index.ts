@@ -7,6 +7,37 @@ export interface DBOptions {
   proxy: boolean;
 }
 
+// private
+const operations = {
+  add: "+",
+  addition: "+",
+  sub: "-",
+  subtract: "-",
+  mult: "*",
+  multiply: "*",
+  div: "/",
+  divide: "/",
+  exp: "^",
+  exponent: "^",
+  mod: "%",
+  modulo: "%",
+} as const;
+
+// public/enum
+export const Operations = {
+  Add: "+",
+  Subtract: "-",
+  Multiply: "*",
+  Divide: "/",
+  Exponent: "^",
+  Modulo: "%",
+} as const;
+
+type ObjectValues<T> = T[keyof T];
+type WordOperation = keyof typeof operations;
+type SymbolOperations = ObjectValues<typeof operations>;
+type Operation = WordOperation | SymbolOperations | "rand" | "random";
+
 class JsonDB {
   private options: DBOptions = {
     dataDir: "./data",
@@ -27,6 +58,39 @@ class JsonDB {
 
   private getPath(key: string) {
     return resolve(process.cwd(), this.options.dataDir, `${key}.json`);
+  }
+  private mathOp(base: number, op: Operation, opand: number): number | null {
+    switch (op) {
+      case "add":
+      case "addition":
+      case "+":
+        return base + opand;
+      case "sub":
+      case "subtract":
+      case "-":
+        return base - opand;
+      case "mult":
+      case "multiply":
+      case "*":
+        return base * opand;
+      case "div":
+      case "divide":
+      case "/":
+        return base / opand;
+      case "exp":
+      case "exponent":
+      case "^":
+        return Math.pow(base, opand);
+      case "mod":
+      case "modulo":
+      case "%":
+        return base % opand;
+      case "rand":
+      case "random":
+        return Math.floor(Math.random() * Math.floor(opand));
+      default:
+        return null;
+    }
   }
 
   get(key: string, path?: string) {
@@ -117,6 +181,11 @@ class JsonDB {
         },
       });
     else return data;
+  }
+
+  math(key: string, operation: Operation, operand: number, path?: string) {
+    const data = this.get(key, path);
+    return this.set(key, this.mathOp(data, operation, operand), path);
   }
 }
 
