@@ -1,6 +1,6 @@
 {
   "name": "toasted-db.json",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Make databases with just simple JSON files!",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
