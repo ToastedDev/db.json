@@ -25,7 +25,7 @@ class JsonDB {
     return this;
   }
 
-  private getDbPath(key: string) {
+  private getPath(key: string) {
     return resolve(process.cwd(), this.options.dataDir, `${key}.json`);
   }
 
@@ -33,7 +33,7 @@ class JsonDB {
     if (isNil(key)) return null;
     key = key.toString();
 
-    const dbPath = this.getDbPath(key);
+    const dbPath = this.getPath(key);
 
     let data;
     try {
@@ -74,7 +74,7 @@ class JsonDB {
       data = value;
     }
 
-    const dbPath = this.getDbPath(key);
+    const dbPath = this.getPath(key);
     if (this.options.proxy)
       return new Proxy(data, {
         set(target, key, value) {
@@ -91,7 +91,32 @@ class JsonDB {
     if (!isNil(path)) {
       const data = this.get(key);
       return _has(data, path);
-    } else return fs.existsSync(this.getDbPath(key));
+    } else return fs.existsSync(this.getPath(key));
+  }
+
+  push(key: string, val: any, path?: string): this {
+    const data = this.get(key, path);
+
+    if (!isNil(path)) {
+      const propValue = _get(data, path);
+      propValue.push(val);
+      _set(data, path, propValue);
+    } else {
+      data.push(val);
+    }
+
+    this.set(key, data);
+
+    const dbPath = this.getPath(key);
+    if (this.options.proxy)
+      return new Proxy(data, {
+        set(target, key, value) {
+          target[key] = value as never;
+          fs.writeFileSync(dbPath, JSON.stringify(target, null, 2));
+          return true;
+        },
+      });
+    else return data;
   }
 }
 
